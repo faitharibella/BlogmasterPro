@@ -1,0 +1,60 @@
+doctype html
+html(lang="en")
+head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Dashboard - Blog Master Pro
+    link(rel="stylesheet", href="/css/style.css")
+body
+    .container
+        h1 Dashboard
+        p Welcome, #{user.firstName} #{user.lastName}
+        
+        if success_msg
+            .success= success_msg
+        if error_msg
+            .error= error_msg
+        
+        if isAdmin
+            .admin-badge Admin Access - You can approve and manage all blogs
+        
+        .add-blog
+            h2 Write a New Blog
+            form(action="/blogs/add", method="POST")
+                input(type="text", name="title", placeholder="Blog Title", required)
+                textarea(name="description", rows="5", placeholder="Write your blog content here", required)
+                button(type="submit") Publish Blog
+        
+        h2 All Blogs
+        
+        if blogs && blogs.length > 0
+            .blogs-list
+                each blog in blogs
+                    .blog-card
+                        h3= blog.title
+                        .meta
+                            span Author: #{blog.author.firstName} #{blog.author.lastName}
+                            span Date: #{blog.dateCreated.toLocaleDateString()}
+                        p= blog.description
+                        .status
+                            if blog.approveStatus === 'pending'
+                                span.badge.pending Pending Approval
+                            else if blog.approveStatus === 'approved'
+                                span.badge.approved Approved
+                            else if blog.approveStatus === 'rejected'
+                                span.badge.rejected Rejected
+                        .actions
+                            if isAdmin && blog.approveStatus === 'pending'
+                                form(action=`/blogs/approve/${blog._id}`, method="POST", style="display:inline")
+                                    button.approve Approve
+                                form(action=`/blogs/reject/${blog._id}`, method="POST", style="display:inline")
+                                    button.reject Reject
+                            
+                            if isAdmin || blog.author._id.toString() === user._id.toString()
+                                form(action=`/blogs/delete/${blog._id}`, method="POST", style="display:inline", onsubmit="return confirm('Are you sure you want to delete this blog?')")
+                                    button.delete Delete
+        else
+            p No blogs yet. Write your first blog
+        
+        br
+        a(href="/logout") Logout
